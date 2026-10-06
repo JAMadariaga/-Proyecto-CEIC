@@ -370,6 +370,118 @@ body {
   box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
 }
 
+/* Admin session */
+.admin-session {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-name {
+  color: white;
+  font-weight: 600;
+}
+
+.logout-btn {
+  padding: 0.6rem 1.2rem;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  background: transparent;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+/* Login */
+.login-page {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+}
+
+.login-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 2px solid #fbbf24;
+  animation: slideUp 0.3s ease;
+}
+
+.login-logo {
+  display: block;
+  height: 90px;
+  width: auto;
+  margin: 0 auto 1rem;
+}
+
+.login-card h2 {
+  color: #1e40af;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.login-card h2::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #1e40af, #fbbf24);
+  margin: 0.5rem auto 0;
+  border-radius: 2px;
+}
+
+.login-error {
+  color: #dc2626;
+  background: #fef2f2;
+  border-left: 4px solid #dc2626;
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 0.875rem 2rem;
+  background: #fbbf24;
+  color: #1e40af;
+  border: none;
+  border-bottom: 3px solid #dc2626;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.login-btn:hover:not(:disabled) {
+  background: #f59e0b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header-content {

@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import logo from '/logo.png'
+import Login from './Login.jsx'
+
+const TOKEN_KEY = 'ceic_admin_token'
 
 function App() {
+  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY))
+  const [adminName, setAdminName] = useState('')
   const [message, setMessage] = useState('Conectando...')
   const [activePage, setActivePage] = useState('Inicio')
   const [products, setProducts] = useState([])
@@ -14,22 +19,62 @@ function App() {
     image: null
   })
 
+  const authHeaders = { Authorization: `Bearer ${token}` }
+
+  const clearSession = () => {
+    localStorage.removeItem(TOKEN_KEY)
+    setToken(null)
+    setAdminName('')
+    setActivePage('Inicio')
+  }
+
+  const handleLogin = ({ token: newToken, username }) => {
+    localStorage.setItem(TOKEN_KEY, newToken)
+    setToken(newToken)
+    setAdminName(username)
+  }
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/logout', { method: 'POST', headers: authHeaders })
+    } catch (err) {
+      console.error('Error al cerrar sesión:', err)
+    }
+    clearSession()
+  }
+
   useEffect(() => {
+    if (!token) return
+    fetch('/api/me', { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => {
+        if (!res.ok) throw new Error('Sesión inválida')
+        return res.json()
+      })
+      .then(data => setAdminName(data.username))
+      .catch(() => {
+        localStorage.removeItem(TOKEN_KEY)
+        setToken(null)
+      })
+  }, [token])
+
+  useEffect(() => {
+    if (!token) return
     fetch('/api/test')
       .then(res => res.json())
       .then(data => setMessage(data.message))
       .catch(err => setMessage('Error de conexión'))
-  }, [])
+  }, [token])
 
   useEffect(() => {
-    if (activePage === 'Taller 1') {
+    if (token && activePage === 'Taller 1') {
       fetchProducts()
     }
-  }, [activePage])
+  }, [activePage, token])
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('/api/products')
+      const response = await fetch('/api/products', { headers: authHeaders })
+      if (response.status === 401) return clearSession()
       const data = await response.json()
       setProducts(data)
     } catch (err) {
@@ -50,8 +95,10 @@ function App() {
     try {
       const response = await fetch('/api/products', {
         method: 'POST',
+        headers: authHeaders,
         body: formDataToSend
       })
+      if (response.status === 401) return clearSession()
       const data = await response.json()
       setProducts([data, ...products])
       setShowModal(false)
@@ -62,6 +109,10 @@ function App() {
   }
 
   const menuItems = ['Inicio', 'Taller 1', 'Taller 2', 'Taller 3', 'Taller 4']
+
+  if (!token) {
+    return <Login onLogin={handleLogin} />
+  }
 
   return (
     <div className="app-container">
@@ -79,6 +130,12 @@ function App() {
               </button>
             ))}
           </nav>
+          <div className="admin-session">
+            {adminName && <span className="admin-name">{adminName}</span>}
+            <button className="logout-btn" onClick={handleLogout}>
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </header>
 

@@ -26,6 +26,15 @@ Abre tu navegador en: http://localhost:3000
 
 Deberías ver el mensaje: **"Conectado al servidor y a PostgreSQL"**
 
+## Acceso de administrador
+
+Antes de entrar al sitio se muestra una pantalla de inicio de sesión. Al iniciar el servidor se crea (si no existe) un administrador en la tabla `admins` de PostgreSQL con la contraseña guardada como hash:
+
+- Usuario: `admin` (variable `ADMIN_USERNAME`)
+- Contraseña: `admin123` (variable `ADMIN_PASSWORD`)
+
+Cambia estas credenciales en `docker-compose.yml` antes de usarlo en producción. Las rutas `/api/products` requieren una sesión de administrador (`Authorization: Bearer <token>`); la sesión dura 8 horas y se pierde al reiniciar el servidor.
+
 ## Ejecutar sin Docker (desarrollo)
 
 ### 1. Iniciar PostgreSQL localmente:

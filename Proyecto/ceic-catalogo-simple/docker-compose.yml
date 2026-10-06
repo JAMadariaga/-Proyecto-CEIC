@@ -11,6 +11,8 @@ services:
       - DB_NAME=ceic_catalogo
       - DB_USER=ceic_user
       - DB_PASSWORD=ceic_password
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=admin123
     depends_on:
       - postgres
     restart: unless-stopped
