@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -9,13 +10,15 @@ const crypto = require('crypto');
 const app = express();
 const PORT = 3000;
 
-// Configuración de PostgreSQL
+// Configuración de PostgreSQL (Neon)
+if (!process.env.DATABASE_URL) {
+  console.error('Falta la variable DATABASE_URL (cadena de conexión de Neon) en .env');
+  process.exit(1);
+}
+
 const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'ceic_catalogo',
-  user: process.env.DB_USER || 'ceic_user',
-  password: process.env.DB_PASSWORD || 'ceic_password',
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: true },
 });
 
 // Configuración de multer para subir imágenes
