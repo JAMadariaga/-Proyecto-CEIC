@@ -1,8 +1,7 @@
-require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const { Pool } = require('pg');
 const multer = require('multer');
 const crypto = require('crypto');
@@ -34,7 +33,8 @@ const upload = multer({
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'client/dist')));
+const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
+app.use(express.static(frontendDist));
 
 // Autenticacion                                                       
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
@@ -397,7 +397,7 @@ app.use('/api', (req, res) => res.status(404).json({ error: 'Ruta no encontrada'
 
 // Fallback para SPA 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/dist', 'index.html'));
+  res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
 app.listen(PORT, () => {

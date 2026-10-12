@@ -4,16 +4,16 @@ Ambiente de trabajo básico con Node.js, React, PostgreSQL y Docker.
 
 ## Estructura
 
-- `server.js` - Servidor Express con API de prueba y conexión a PostgreSQL
-- `client/` - Aplicación React con Vite
+- `backend/` - Servidor Express, conexión a PostgreSQL y variables de entorno
+- `frontend/` - Aplicación React con Vite
 - `Dockerfile` - Configuración de Docker para la app
 - `docker-compose.yml` - Configuración de Docker Compose (app + PostgreSQL)
-- `.env` - Variables de entorno para la base de datos
+- `.env` - Variables de entorno para la base de datos, fuera de `backend/`
 
 ## Ejecutar con Docker
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 Esto iniciará:
@@ -35,13 +35,14 @@ docker run -d -p 5432:5432 -e POSTGRES_DB=ceic_catalogo -e POSTGRES_USER=ceic_us
 
 ### 2. Servidor backend:
 ```bash
+cd backend
 npm install
 npm start
 ```
 
 ### 3. Cliente React:
 ```bash
-cd client
+cd frontend
 npm install
 npm run dev
 ```
