@@ -1,25 +1,25 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-const { Pool } = require('pg');
 const multer = require('multer');
 const crypto = require('crypto');
 const sharp = require('sharp');
+const { pool, initializeDatabase } = require('./db');
+const adminController = require('./controllers/adminController');
+const tallerController = require('./controllers/tallerController');
+const productoController = require('./controllers/productoController');
+const qrScanController = require('./controllers/qrScanController');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1); 
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  `postgresql://${process.env.DB_USER || 'ceic_user'}:${process.env.DB_PASSWORD || 'ceic_password'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME || 'ceic_catalogo'}`;
-const sslConfig = process.env.DATABASE_URL ? { rejectUnauthorized: false } : false;
-
-const pool = new Pool({ connectionString, ssl: sslConfig });
-
-// Talleres  
-const TALLERES = ['lavado-autos', 'reposteria', 'mantencion', 'teteria'];
+const TALLERES = {
+  'lavado-autos': 'Lavado de autos',
+  reposteria: 'Repostería',
+  mantencion: 'Mantención y reparaciones',
+  teteria: 'Tetería',
+};
 
 // Subida de imagenes con un limite de 10 MB
 const upload = multer({
@@ -38,6 +38,8 @@ app.use(express.static(frontendDist));
 
 // Autenticacion                                                       
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ADMIN_USERNAME;
+const ADMIN_NAME = process.env.ADMIN_NAME || 'Administrador';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 const sessions = new Map();
@@ -94,68 +96,22 @@ const loginLimiter = (req, res, next) => {
   next();
 };
 
-// Base de datos                                                      
-const initDB = async () => {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS admins (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(100) UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    await pool.query(
-      'INSERT INTO admins (username, password_hash) VALUES ($1, $2) ON CONFLICT (username) DO NOTHING',
-      [ADMIN_USERNAME, hashPassword(ADMIN_PASSWORD)]
-    );
-    console.log('Tabla de administradores verificada/creada');
-
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS products (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        description TEXT,
-        price DECIMAL(10, 2) NOT NULL,
-        image TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    // Columnas nuevas 
-    await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS taller VARCHAR(50)');
-    await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
-    console.log('Tabla de productos verificada/creada');
-
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS qr_scans (
-        id SERIAL PRIMARY KEY,
-        source VARCHAR(50),
-        scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    console.log('Tabla de escaneos QR verificada/creada');
-  } catch (err) {
-    console.error('Error al crear tablas:', err);
-  }
-};
-
-initDB();
+// Las tablas del catálogo se crean al iniciar la aplicación.
 
 // Helpers de productos                              
 // Nunca traemos la imagen completa en las listas
-const PRODUCT_COLUMNS =
-  'id, name, description, price, taller, created_at, updated_at, (image IS NOT NULL) AS has_image';
-
 const toPublic = (row) => ({
-  id: row.id,
-  name: row.name,
-  description: row.description,
-  price: Number(row.price),
-  taller: row.taller,
-  image_url: row.has_image
-    ? `/api/products/${row.id}/image?v=${new Date(row.updated_at).getTime()}`
-    : null,
-  created_at: row.created_at,
+  id: row.id_producto,
+  name: row.nombre,
+  description: row.descripcion,
+  price: Number(row.precio),
+  taller: Object.keys(TALLERES).find((slug) => TALLERES[slug] === row.taller_nombre) || null,
+  image_url: !row.imagen_url
+    ? null
+    : row.imagen_url.startsWith('data:')
+      ? `/api/products/${row.id_producto}/image`
+      : row.imagen_url,
+  created_at: row.creado_en,
 });
 
 // Redimensiona, corrige la rotacion del celular y comprime a JPEG
@@ -175,9 +131,9 @@ const parseProductBody = (body) => {
   const price = Number(body.price);
   const taller = body.taller;
 
-  if (!name || name.length > 255) return { error: 'El nombre es obligatorio (máx. 255 caracteres)' };
-  if (!Number.isFinite(price) || price < 0 || price > 99999999) return { error: 'El precio no es válido' };
-  if (!TALLERES.includes(taller)) return { error: 'Taller no válido' };
+  if (!name || name.length > 150) return { error: 'El nombre es obligatorio (máx. 150 caracteres)' };
+  if (!Number.isFinite(price) || price < 0 || price > 9999999999.99) return { error: 'El precio no es válido' };
+  if (!Object.hasOwn(TALLERES, taller)) return { error: 'Taller no válido' };
   return { data: { name, description, price, taller } };
 };
 
@@ -197,7 +153,7 @@ app.get('/api/test', async (req, res) => {
   }
 });
 
-app.get('/api/talleres', (req, res) => res.json(TALLERES));
+app.get('/api/talleres', (req, res) => res.json(Object.keys(TALLERES)));
 
 // Rutas, sesion de administrador                                     
 app.post('/api/login', loginLimiter, async (req, res) => {
@@ -207,16 +163,20 @@ app.post('/api/login', loginLimiter, async (req, res) => {
   }
 
   try {
-    const result = await pool.query('SELECT username, password_hash FROM admins WHERE username = $1', [username]);
+    const result = await adminController.findByCorreo(username);
     const admin = result.rows[0];
 
-    if (!admin || !verifyPassword(password, admin.password_hash)) {
+    if (!admin || !admin.activo || !verifyPassword(password, admin.password_hash)) {
       return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
     }
 
     const token = crypto.randomBytes(32).toString('hex');
-    sessions.set(token, { username: admin.username, expiresAt: Date.now() + SESSION_TTL_MS });
-    res.json({ token, username: admin.username });
+    sessions.set(token, {
+      id_admin: admin.id_admin,
+      username: admin.nombre,
+      expiresAt: Date.now() + SESSION_TTL_MS,
+    });
+    res.json({ token, username: admin.nombre });
   } catch (err) {
     console.error('Error al iniciar sesión:', err);
     res.status(500).json({ error: 'Error al iniciar sesión' });
@@ -239,15 +199,12 @@ app.post('/api/admin/password', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres' });
   }
   try {
-    const result = await pool.query('SELECT password_hash FROM admins WHERE username = $1', [req.admin.username]);
+    const result = await adminController.findById(req.admin.id_admin);
     const admin = result.rows[0];
     if (!admin || !verifyPassword(currentPassword, admin.password_hash)) {
       return res.status(401).json({ error: 'La contraseña actual no es correcta' });
     }
-    await pool.query('UPDATE admins SET password_hash = $1 WHERE username = $2', [
-      hashPassword(newPassword),
-      req.admin.username,
-    ]);
+    await adminController.updatePassword(admin.id_admin, hashPassword(newPassword));
     res.json({ message: 'Contraseña actualizada' });
   } catch (err) {
     console.error('Error al cambiar contraseña:', err);
@@ -260,16 +217,10 @@ app.post('/api/admin/password', requireAdmin, async (req, res) => {
 app.get('/api/products', async (req, res) => {
   try {
     const { taller } = req.query;
-    let result;
     if (taller) {
-      if (!TALLERES.includes(taller)) return res.status(400).json({ error: 'Taller no válido' });
-      result = await pool.query(
-        `SELECT ${PRODUCT_COLUMNS} FROM products WHERE taller = $1 ORDER BY created_at DESC`,
-        [taller]
-      );
-    } else {
-      result = await pool.query(`SELECT ${PRODUCT_COLUMNS} FROM products ORDER BY created_at DESC`);
+      if (!Object.hasOwn(TALLERES, taller)) return res.status(400).json({ error: 'Taller no válido' });
     }
+    const result = await productoController.list(taller ? TALLERES[taller] : null);
     res.json(result.rows.map(toPublic));
   } catch (err) {
     console.error('Error al obtener productos:', err);
@@ -282,12 +233,12 @@ app.get('/api/products/:id/image', async (req, res) => {
   const id = parseId(req.params.id);
   if (!id) return res.status(400).end();
   try {
-    const result = await pool.query('SELECT image FROM products WHERE id = $1', [id]);
-    const image = result.rows[0] && result.rows[0].image;
+    const result = await productoController.findImageById(id);
+    const image = result.rows[0] && result.rows[0].imagen_url;
     const match = image && image.match(/^data:(.+?);base64,(.+)$/);
     if (!match) return res.status(404).end();
     res.set('Content-Type', match[1]);
-    res.set('Cache-Control', 'public, max-age=604800');
+    res.set('Cache-Control', 'no-store');
     res.send(Buffer.from(match[2], 'base64'));
   } catch (err) {
     console.error('Error al obtener imagen:', err);
@@ -302,13 +253,17 @@ app.post('/api/products', requireAdmin, upload.single('image'), async (req, res)
   const { name, description, price, taller } = parsed.data;
 
   try {
+    const workshopResult = await tallerController.findByName(TALLERES[taller]);
+    const workshop = workshopResult.rows[0];
+    if (!workshop || !workshop.activo) return res.status(400).json({ error: 'Taller no válido' });
     const image = req.file ? await processImage(req.file.buffer) : null;
-    const result = await pool.query(
-      `INSERT INTO products (name, description, price, taller, image)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING ${PRODUCT_COLUMNS}`,
-      [name, description, price, taller, image]
-    );
+    const result = await productoController.create({
+      idTaller: workshop.id_taller,
+      nombre: name,
+      descripcion: description,
+      precio: price,
+      imagenUrl: image,
+    });
     res.status(201).json(toPublic(result.rows[0]));
   } catch (err) {
     console.error('Error al crear producto:', err);
@@ -326,15 +281,17 @@ app.put('/api/products/:id', requireAdmin, upload.single('image'), async (req, r
   const { name, description, price, taller } = parsed.data;
 
   try {
-    const params = [name, description, price, taller, id];
-    let sql = 'UPDATE products SET name = $1, description = $2, price = $3, taller = $4, updated_at = NOW()';
-    if (req.file) {
-      sql += ', image = $6';
-      params.push(await processImage(req.file.buffer));
-    }
-    sql += ` WHERE id = $5 RETURNING ${PRODUCT_COLUMNS}`;
-
-    const result = await pool.query(sql, params);
+    const workshopResult = await tallerController.findByName(TALLERES[taller]);
+    const workshop = workshopResult.rows[0];
+    if (!workshop || !workshop.activo) return res.status(400).json({ error: 'Taller no válido' });
+    const image = req.file ? await processImage(req.file.buffer) : null;
+    const result = await productoController.update(id, {
+      idTaller: workshop.id_taller,
+      nombre: name,
+      descripcion: description,
+      precio: price,
+      imagenUrl: image,
+    });
     if (result.rows.length === 0) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json(toPublic(result.rows[0]));
   } catch (err) {
@@ -348,7 +305,7 @@ app.delete('/api/products/:id', requireAdmin, async (req, res) => {
   const id = parseId(req.params.id);
   if (!id) return res.status(400).json({ error: 'ID no válido' });
   try {
-    const result = await pool.query('DELETE FROM products WHERE id = $1', [id]);
+    const result = await productoController.remove(id);
     if (result.rowCount === 0) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json({ message: 'Producto eliminado' });
   } catch (err) {
@@ -362,7 +319,7 @@ app.delete('/api/products/:id', requireAdmin, async (req, res) => {
 app.get('/qr', async (req, res) => {
   const source = String(req.query.src || 'general').slice(0, 50);
   try {
-    await pool.query('INSERT INTO qr_scans (source) VALUES ($1)', [source]);
+    await qrScanController.record(source);
   } catch (err) {
     console.error('Error al registrar escaneo QR:', err); // no bloquea al visitante
   }
@@ -371,10 +328,8 @@ app.get('/qr', async (req, res) => {
 
 app.get('/api/admin/stats', requireAdmin, async (req, res) => {
   try {
-    const total = await pool.query('SELECT COUNT(*)::int AS total FROM qr_scans');
-    const bySource = await pool.query(
-      'SELECT source, COUNT(*)::int AS total FROM qr_scans GROUP BY source ORDER BY total DESC'
-    );
+    const total = await qrScanController.count();
+    const bySource = await qrScanController.countBySource();
     res.json({ qrScans: total.rows[0].total, bySource: bySource.rows });
   } catch (err) {
     console.error('Error al obtener estadísticas:', err);
@@ -400,6 +355,22 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+const start = async () => {
+  try {
+    await initializeDatabase();
+    await adminController.createIfMissing({
+      nombre: ADMIN_NAME,
+      correo: ADMIN_EMAIL,
+      passwordHash: hashPassword(ADMIN_PASSWORD),
+    });
+    app.listen(PORT, () => {
+      console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('Error al inicializar la base de datos:', err);
+    await pool.end();
+    process.exitCode = 1;
+  }
+};
+
+start();
