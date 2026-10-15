@@ -551,10 +551,11 @@ body {
 .manager-shortcuts button span { color: #1d4057; font-size: 16px; font-weight: 700; }
 .manager-shortcuts button strong { grid-row: span 2; color: #c39418; font-size: 29px; }
 .manager-shortcuts button small { color: #687984; }
-.manager-qr { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; padding: 19px 22px; border: 1px solid #dce2e5; background: #fff; }
+.manager-qr { margin-top: 22px; padding: 19px 22px; border: 1px solid #dce2e5; background: #fff; }
 .manager-qr h2 { margin: 0 0 5px; }
 .manager-qr p { color: #6b7a83; font-size: 13px; }
-.manager-qr > strong { color: #1c4e6b; font-size: 30px; }
+.manager-qr-heading p strong { color: #1c4e6b; font-size: 18px; }
+.manager-qr .qr-generator { margin-bottom: 0; }
 .manager-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 .manager-list-heading p { color: #667781; font-size: 14px; }
 .manager-list-heading h2 { margin: 0; }

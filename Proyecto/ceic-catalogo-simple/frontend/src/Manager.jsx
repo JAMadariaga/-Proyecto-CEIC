@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { QRCodeCanvas } from 'qrcode.react'
 import logo from '/logo.png'
 import { formatPrecio } from './talleres'
 
@@ -28,6 +29,8 @@ function Manager() {
   const [users, setUsers] = useState([])
   const [products, setProducts] = useState([])
   const [stats, setStats] = useState(null)
+  const [qrSource, setQrSource] = useState('feria')
+  const qrCanvasRef = useRef(null)
   const [search, setSearch] = useState('')
   const [workshopFilter, setWorkshopFilter] = useState('')
   const [modal, setModal] = useState(null)
@@ -83,6 +86,17 @@ function Manager() {
     const matchesWorkshop = !workshopFilter || String(item.workshop_id) === workshopFilter
     return matchesText && matchesWorkshop
   }), [products, search, workshopFilter])
+  const qrValue = `${window.location.origin}/qr?src=${encodeURIComponent(qrSource.trim() || 'general')}`
+
+  const downloadQr = () => {
+    const canvas = qrCanvasRef.current
+    if (!canvas) return
+    const anchor = document.createElement('a')
+    const filenameSource = (qrSource.trim() || 'general').replace(/[^a-z0-9_-]/gi, '-')
+    anchor.href = canvas.toDataURL('image/png')
+    anchor.download = `catalogo-qr-${filenameSource}.png`
+    anchor.click()
+  }
 
   const refresh = async (type) => {
     if (type === 'workshops' || type === 'all') setWorkshops(await requestApi(token, '/api/admin/workshops'))
@@ -246,7 +260,30 @@ function Manager() {
             </div>
             <h2>Administración</h2>
             <div className="manager-shortcuts">{adminNav.slice(1).map(([id, label]) => <button key={id} onClick={() => setSection(id)}><span>{label}</span><strong>{id === 'workshops' ? workshops.length : id === 'users' ? users.length : products.length}</strong><small>Gestionar {label.toLowerCase()} →</small></button>)}</div>
-            <section className="manager-qr"><div><h2>Actividad del catálogo</h2><p>Escaneos QR registrados</p></div><strong>{stats?.qrScans ?? '—'}</strong></section>
+            <section className="manager-qr">
+              <div className="manager-qr-heading">
+                <div><h2>Código QR del catálogo</h2><p>Escaneos registrados: <strong>{stats?.qrScans ?? '—'}</strong></p></div>
+              </div>
+              <div className="qr-generator">
+                <div className="qr-preview">
+                  <QRCodeCanvas ref={qrCanvasRef} value={qrValue} size={216} level="H" marginSize={2} />
+                </div>
+                <div className="qr-controls">
+                  <label htmlFor="qr-source">Origen del QR</label>
+                  <input
+                    id="qr-source"
+                    type="text"
+                    value={qrSource}
+                    maxLength={50}
+                    onChange={(event) => setQrSource(event.target.value)}
+                  />
+                  <p className="stats-link">{qrValue}</p>
+                  <button className="qr-download" onClick={downloadQr}>
+                    Descargar QR en PNG
+                  </button>
+                </div>
+              </div>
+            </section>
           </>}
 
           {section === 'workshop' && profile.role === 'user' && <>
