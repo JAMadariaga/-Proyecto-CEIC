@@ -6,7 +6,7 @@ const list = () => pool.query(
 
 const findById = (id) => pool.query('SELECT * FROM admin WHERE id_admin = $1', [id]);
 
-const findByCorreo = (correo) => pool.query('SELECT * FROM admin WHERE correo = $1', [correo]);
+const findByCorreo = (correo) => pool.query('SELECT * FROM admin WHERE LOWER(correo) = LOWER($1)', [correo]);
 
 const create = ({ nombre, correo, passwordHash, activo = true }) => pool.query(
   `INSERT INTO admin (nombre, correo, password_hash, activo)

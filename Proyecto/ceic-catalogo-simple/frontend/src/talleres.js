@@ -15,4 +15,9 @@ export const ICONOS_TALLER = {
   teteria: '☕'
 }
 
+export const iconoTaller = (name) => {
+  const key = Object.keys(NOMBRES_TALLER).find((slug) => NOMBRES_TALLER[slug] === name)
+  return ICONOS_TALLER[key] || '✦'
+}
+
 export const formatPrecio = (price) => `$${Number(price).toLocaleString('es-CL')}`

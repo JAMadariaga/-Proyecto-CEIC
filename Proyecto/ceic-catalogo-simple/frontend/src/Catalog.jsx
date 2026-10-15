@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import logo from '/logo.png'
-import { TALLERES, NOMBRES_TALLER, ICONOS_TALLER, formatPrecio } from './talleres'
+import { ICONOS_TALLER, iconoTaller, formatPrecio } from './talleres'
 
 function Catalog() {
   const [products, setProducts] = useState([])
+  const [workshops, setWorkshops] = useState([])
   const [filter, setFilter] = useState('todos')
   const [status, setStatus] = useState('loading') // loading | ok | error
 
   const loadProducts = () => {
-    setStatus('loading')
     fetch('/api/products')
       .then((res) => {
         if (!res.ok) throw new Error('Error al cargar')
@@ -23,10 +23,17 @@ function Catalog() {
 
   useEffect(() => {
     loadProducts()
+    fetch('/api/workshops')
+      .then((res) => {
+        if (!res.ok) throw new Error('Error al cargar talleres')
+        return res.json()
+      })
+      .then(setWorkshops)
+      .catch(() => setWorkshops([]))
   }, [])
 
   const visibles =
-    filter === 'todos' ? products : products.filter((p) => p.taller === filter)
+    filter === 'todos' ? products : products.filter((p) => String(p.workshop_id) === filter)
 
   return (
     <div className="pub-page">
@@ -49,14 +56,14 @@ function Catalog() {
           >
             <span aria-hidden="true">⭐</span> Todos
           </button>
-          {TALLERES.map((t) => (
+          {workshops.map((workshop) => (
             <button
-              key={t}
-              className={`pub-filter ${filter === t ? 'active' : ''}`}
-              aria-pressed={filter === t}
-              onClick={() => setFilter(t)}
+              key={workshop.id_taller}
+              className={`pub-filter ${filter === String(workshop.id_taller) ? 'active' : ''}`}
+              aria-pressed={filter === String(workshop.id_taller)}
+              onClick={() => setFilter(String(workshop.id_taller))}
             >
-              <span aria-hidden="true">{ICONOS_TALLER[t]}</span> {NOMBRES_TALLER[t]}
+              <span aria-hidden="true">{iconoTaller(workshop.nombre)}</span> {workshop.nombre}
             </button>
           ))}
         </nav>
@@ -70,7 +77,7 @@ function Catalog() {
         {status === 'error' && (
           <div className="pub-message" role="alert">
             <p>No pudimos cargar los productos.</p>
-            <button className="pub-retry" onClick={loadProducts}>
+            <button className="pub-retry" onClick={() => { setStatus('loading'); loadProducts() }}>
               Intentar de nuevo
             </button>
           </div>
@@ -97,10 +104,10 @@ function Catalog() {
                   </div>
                 )}
                 <div className="pub-card-body">
-                  {product.taller && (
+                  {product.workshop_name && (
                     <span className="pub-badge">
-                      <span aria-hidden="true">{ICONOS_TALLER[product.taller]}</span>{' '}
-                      {NOMBRES_TALLER[product.taller]}
+                      <span aria-hidden="true">{ICONOS_TALLER[product.taller] || '✦'}</span>{' '}
+                      {product.workshop_name}
                     </span>
                   )}
                   <h2 className="pub-name">{product.name}</h2>

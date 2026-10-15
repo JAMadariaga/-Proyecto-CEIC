@@ -6,8 +6,23 @@ const SELECT_PRODUCTS = `
   FROM productos p JOIN talleres t ON t.id_taller = p.id_taller`;
 
 const list = (tallerNombre) => tallerNombre
-  ? pool.query(`${SELECT_PRODUCTS} WHERE t.nombre = $1 AND p.activo = TRUE ORDER BY p.creado_en DESC`, [tallerNombre])
-  : pool.query(`${SELECT_PRODUCTS} WHERE p.activo = TRUE ORDER BY p.creado_en DESC`);
+  ? pool.query(`${SELECT_PRODUCTS} WHERE t.nombre = $1 AND t.activo = TRUE AND p.activo = TRUE ORDER BY p.creado_en DESC`, [tallerNombre])
+  : pool.query(`${SELECT_PRODUCTS} WHERE t.activo = TRUE AND p.activo = TRUE ORDER BY p.creado_en DESC`);
+
+const listAdmin = ({ idTaller, search } = {}) => {
+  const conditions = [];
+  const values = [];
+  if (idTaller) {
+    values.push(idTaller);
+    conditions.push(`p.id_taller = $${values.length}`);
+  }
+  if (search) {
+    values.push(`%${search}%`);
+    conditions.push(`p.nombre ILIKE $${values.length}`);
+  }
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  return pool.query(`${SELECT_PRODUCTS} ${where} ORDER BY p.creado_en DESC`, values);
+};
 
 const findById = (id) => pool.query(`${SELECT_PRODUCTS} WHERE p.id_producto = $1`, [id]);
 
@@ -22,14 +37,14 @@ const create = ({ idTaller, nombre, descripcion, precio, stock = 0, imagenUrl = 
   [idTaller, nombre, descripcion, precio, stock, imagenUrl]
 ).then((result) => findById(result.rows[0].id_producto));
 
-const update = (id, { idTaller, nombre, descripcion, precio, imagenUrl }) => pool.query(
+const update = (id, { idTaller, nombre, descripcion, precio, stock = 0, imagenUrl }) => pool.query(
   `UPDATE productos
-   SET id_taller = $2, nombre = $3, descripcion = $4, precio = $5,
-       imagen_url = COALESCE($6, imagen_url)
+   SET id_taller = $2, nombre = $3, descripcion = $4, precio = $5, stock = $6,
+       imagen_url = COALESCE($7, imagen_url)
    WHERE id_producto = $1 RETURNING id_producto`,
-  [id, idTaller, nombre, descripcion, precio, imagenUrl]
+  [id, idTaller, nombre, descripcion, precio, stock, imagenUrl]
 ).then((result) => result.rowCount ? findById(id) : result);
 
 const remove = (id) => pool.query('DELETE FROM productos WHERE id_producto = $1', [id]);
 
-module.exports = { list, findById, findImageById, create, update, remove };
+module.exports = { list, listAdmin, findById, findImageById, create, update, remove };

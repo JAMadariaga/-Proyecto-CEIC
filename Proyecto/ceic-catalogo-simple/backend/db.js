@@ -69,18 +69,6 @@ const initializeDatabase = async () => {
     )
   `);
 
-  const workshopNames = [
-    'Lavado de autos',
-    'Repostería',
-    'Mantención y reparaciones',
-    'Tetería',
-  ];
-  for (const name of workshopNames) {
-    await pool.query(
-      'INSERT INTO talleres (nombre) SELECT $1 WHERE NOT EXISTS (SELECT 1 FROM talleres WHERE nombre = $1)',
-      [name]
-    );
-  }
 };
 
 module.exports = { pool, initializeDatabase };
