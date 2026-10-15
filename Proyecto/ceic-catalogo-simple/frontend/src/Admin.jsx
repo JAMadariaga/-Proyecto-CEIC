@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { QRCodeCanvas } from 'qrcode.react'
 import logo from '/logo.png'
 import { TALLERES, NOMBRES_TALLER, formatPrecio } from './talleres'
 
@@ -9,6 +10,8 @@ function Admin() {
   const [activePage, setActivePage] = useState('Inicio') // 'Inicio' o el id de un taller
   const [products, setProducts] = useState([])
   const [stats, setStats] = useState(null)
+  const [qrSource, setQrSource] = useState('feria')
+  const qrCanvasRef = useRef(null)
   const [showModal, setShowModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null) // null = creando
   const [token, setToken] = useState(localStorage.getItem('ceic_token') || '')
@@ -20,6 +23,17 @@ function Admin() {
   const [formData, setFormData] = useState(FORM_VACIO)
 
   const isTaller = TALLERES.includes(activePage)
+  const qrValue = `${window.location.origin}/qr?src=${encodeURIComponent(qrSource.trim() || 'general')}`
+
+  const downloadQr = () => {
+    const canvas = qrCanvasRef.current
+    if (!canvas) return
+    const anchor = document.createElement('a')
+    const filenameSource = (qrSource.trim() || 'general').replace(/[^a-z0-9_-]/gi, '-')
+    anchor.href = canvas.toDataURL('image/png')
+    anchor.download = `catalogo-qr-${filenameSource}.png`
+    anchor.click()
+  }
 
   useEffect(() => {
     fetch('/api/test')
@@ -316,10 +330,25 @@ function Admin() {
 
               <div className="stats-card">
                 <h2>Código QR</h2>
-                <p className="stats-link">
-                  Enlace para el código QR:{' '}
-                  <strong>{window.location.origin}/qr?src=feria</strong>
-                </p>
+                <div className="qr-generator">
+                  <div className="qr-preview">
+                    <QRCodeCanvas ref={qrCanvasRef} value={qrValue} size={216} level="H" marginSize={2} />
+                  </div>
+                  <div className="qr-controls">
+                    <label htmlFor="qr-source">Origen del QR</label>
+                    <input
+                      id="qr-source"
+                      type="text"
+                      value={qrSource}
+                      maxLength={50}
+                      onChange={(event) => setQrSource(event.target.value)}
+                    />
+                    <p className="stats-link">{qrValue}</p>
+                    <button className="qr-download" onClick={downloadQr}>
+                      Descargar QR en PNG
+                    </button>
+                  </div>
+                </div>
                 {stats ? (
                   <>
                     <p className="stats-number">{stats.qrScans}</p>

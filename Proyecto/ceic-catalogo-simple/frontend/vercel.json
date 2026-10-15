@@ -6,6 +6,10 @@
       "destination": "https://proyecto-ceic-xlt6.onrender.com/api/:path*"
     },
     {
+      "source": "/qr",
+      "destination": "https://proyecto-ceic-xlt6.onrender.com/qr"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
