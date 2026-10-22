@@ -1,5 +1,6 @@
 import './App.css'
 import './extra.css'
+import './polish.css'
 import Catalog from './Catalog'
 import Manager from './Manager'
 

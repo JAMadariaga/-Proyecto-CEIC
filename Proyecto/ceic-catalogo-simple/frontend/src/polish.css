@@ -1,0 +1,611 @@
+/* Capa de pulido visual: animaciones, botones con vida y colores más cálidos.
+   Se importa al final para sobrescribir sin tocar los estilos base. */
+
+:root {
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --warm-bg: #fffaf0;
+  --warm-bg-2: #eef4ff;
+  --brand: #1e40af;
+  --brand-dark: #1e3a8a;
+  --accent: #fbbf24;
+  --accent-dark: #f59e0b;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(circle at 10% 0%, #fff3d1 0, transparent 35%),
+    radial-gradient(circle at 100% 20%, #dbeafe 0, transparent 40%),
+    var(--warm-bg);
+  background-attachment: fixed;
+}
+
+/* ---------- Animaciones base ---------- */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+
+@keyframes pulseRing {
+  0%   { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.55); }
+  100% { box-shadow: 0 0 0 14px rgba(251, 191, 36, 0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- Botones: base compartida ---------- */
+.pub-filter,
+.pub-retry,
+.login-btn,
+.create-product-btn,
+.nav-item,
+.logout-btn,
+.view-catalog,
+.edit-btn,
+.delete-btn,
+.qr-download,
+.manager-primary,
+.manager-row-actions button,
+.manager-shortcuts button,
+.manager-sidebar nav button,
+.manager-side-bottom button,
+.modal-actions button,
+.manager-modal-actions > button {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.25s var(--ease),
+    box-shadow 0.25s var(--ease),
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    filter 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Brillo que cruza el botón al pasar el mouse */
+.pub-retry::after,
+.login-btn::after,
+.create-product-btn::after,
+.manager-primary::after,
+.qr-download::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.6s var(--ease);
+  pointer-events: none;
+}
+
+.pub-retry:hover::after,
+.login-btn:hover:not(:disabled)::after,
+.create-product-btn:hover::after,
+.manager-primary:hover:not(:disabled)::after,
+.qr-download:hover::after {
+  transform: translateX(120%);
+}
+
+.pub-retry:hover,
+.login-btn:hover:not(:disabled),
+.create-product-btn:hover,
+.manager-primary:hover:not(:disabled),
+.qr-download:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(30, 64, 175, 0.28);
+}
+
+.pub-filter:active,
+.pub-retry:active,
+.login-btn:active:not(:disabled),
+.create-product-btn:active,
+.manager-primary:active:not(:disabled),
+.nav-item:active,
+.edit-btn:active,
+.delete-btn:active,
+.logout-btn:active,
+.qr-download:active,
+.manager-row-actions button:active,
+.manager-shortcuts button:active,
+.modal-actions button:active,
+.manager-modal-actions > button:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow: none;
+}
+
+/* Botón deshabilitado: pequeño spinner en lugar de solo "apagarse" */
+.login-btn:disabled,
+.manager-primary:disabled {
+  background-image: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.5) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+/* ---------- Catálogo público ---------- */
+.pub-header {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(120deg, #1e40af 0%, #2563eb 55%, #3b82f6 100%);
+  box-shadow: 0 6px 24px rgba(30, 64, 175, 0.25);
+}
+
+.pub-header::before,
+.pub-header::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(251, 191, 36, 0.18);
+  pointer-events: none;
+}
+
+.pub-header::before { width: 260px; height: 260px; right: -60px; top: -120px; }
+.pub-header::after  { width: 140px; height: 140px; right: 22%; bottom: -80px; background: rgba(255, 255, 255, 0.1); }
+
+.pub-header-inner { position: relative; z-index: 1; }
+
+.pub-logo {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
+  animation: floatY 5s ease-in-out infinite;
+}
+
+.pub-header h1,
+.pub-header p {
+  animation: riseIn 0.7s var(--ease) both;
+}
+.pub-header p { animation-delay: 0.12s; }
+
+/* Filtros tipo "chip" */
+.pub-filter {
+  border-width: 2px;
+  box-shadow: 0 2px 6px rgba(30, 64, 175, 0.1);
+}
+
+.pub-filter:hover {
+  background: #dbeafe;
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 18px rgba(30, 64, 175, 0.2);
+}
+
+.pub-filter.active {
+  background: linear-gradient(135deg, #fde68a, var(--accent));
+  border-color: var(--accent-dark);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+  transform: translateY(-2px);
+}
+
+.pub-filter.active:hover {
+  transform: translateY(-3px) scale(1.03);
+}
+
+.pub-filters { animation: riseIn 0.6s var(--ease) 0.15s both; }
+
+/* Tarjetas de producto */
+.pub-card {
+  border: 1px solid #e8e1d0;
+  border-radius: 20px;
+  box-shadow: 0 4px 14px rgba(30, 58, 138, 0.08);
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease), border-color 0.35s ease;
+  animation: riseIn 0.6s var(--ease) both;
+}
+
+.pub-card:nth-child(1) { animation-delay: 0.05s; }
+.pub-card:nth-child(2) { animation-delay: 0.1s; }
+.pub-card:nth-child(3) { animation-delay: 0.15s; }
+.pub-card:nth-child(4) { animation-delay: 0.2s; }
+.pub-card:nth-child(5) { animation-delay: 0.25s; }
+.pub-card:nth-child(6) { animation-delay: 0.3s; }
+.pub-card:nth-child(n + 7) { animation-delay: 0.35s; }
+
+.pub-card:hover {
+  transform: translateY(-8px) rotate(-0.4deg);
+  border-color: var(--accent);
+  box-shadow: 0 18px 36px rgba(30, 58, 138, 0.18);
+}
+
+.pub-image {
+  transition: transform 0.6s var(--ease);
+}
+
+.pub-card {
+  /* el zoom de la imagen queda recortado por la tarjeta */
+  isolation: isolate;
+}
+
+.pub-card:hover .pub-image {
+  transform: scale(1.07);
+}
+
+.pub-image-empty {
+  background: linear-gradient(135deg, #fff3d1, #dbeafe);
+}
+
+.pub-badge {
+  background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+  transition: transform 0.25s var(--ease), background-color 0.25s ease;
+}
+
+.pub-card:hover .pub-badge {
+  transform: translateX(4px);
+}
+
+.pub-price {
+  display: inline-block;
+  transition: transform 0.3s var(--ease), color 0.3s ease;
+  transform-origin: left center;
+}
+
+.pub-card:hover .pub-price {
+  transform: scale(1.06);
+  color: var(--brand);
+}
+
+/* Mensajes de carga / error */
+.pub-message {
+  border: 1px solid #bfdbfe;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ffffff, var(--warm-bg-2));
+  box-shadow: 0 6px 20px rgba(30, 64, 175, 0.1);
+  animation: riseIn 0.5s var(--ease) both;
+}
+
+.pub-message[role='status']::before {
+  content: '';
+  display: block;
+  width: 38px;
+  height: 38px;
+  margin: 0 auto 0.9rem;
+  border: 4px solid #bfdbfe;
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.pub-retry {
+  background: linear-gradient(135deg, #2563eb, var(--brand-dark));
+}
+
+.pub-footer a {
+  position: relative;
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.pub-footer a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: var(--accent-dark);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s var(--ease);
+}
+
+.pub-footer a:hover { color: var(--brand); }
+.pub-footer a:hover::after { transform: scaleX(1); }
+
+/* ---------- Login ---------- */
+.login-page,
+.manager-login {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(251, 191, 36, 0.25), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.3), transparent 45%),
+    linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+}
+
+.manager-login-panel,
+.login-card {
+  animation: riseIn 0.7s var(--ease) both;
+  border-radius: 18px;
+}
+
+.manager-login-panel {
+  border-top-color: var(--accent);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+}
+
+.manager-login-panel > img,
+.login-logo {
+  animation: floatY 5s ease-in-out infinite;
+}
+
+.login-btn {
+  background: linear-gradient(135deg, #22d3ee, #38bdf8, #60a5fa);
+}
+
+/* Campos de formulario: foco con brillo suave */
+.manager-login-panel input,
+.manager-field input,
+.manager-field textarea,
+.manager-field select,
+.manager-filters select,
+.manager-search,
+.form-group input,
+.form-group textarea {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+  border-radius: 8px;
+}
+
+.manager-login-panel input:focus,
+.manager-field input:focus,
+.manager-field textarea:focus,
+.manager-field select:focus,
+.manager-filters select:focus,
+.manager-search:focus-within {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+/* ---------- Panel de administración ---------- */
+.manager-shell {
+  background: linear-gradient(180deg, #f6f8fb 0%, #fff8e8 100%);
+}
+
+.manager-sidebar {
+  background: linear-gradient(180deg, #1e4a6e 0%, #173d58 60%, #12314a 100%);
+  box-shadow: 4px 0 20px rgba(18, 49, 74, 0.2);
+}
+
+.manager-brand img {
+  border-radius: 10px;
+  transition: transform 0.4s var(--ease);
+}
+
+.manager-brand:hover img {
+  transform: rotate(-6deg) scale(1.08);
+}
+
+.manager-sidebar nav button,
+.manager-side-bottom button,
+.manager-side-bottom a {
+  border-radius: 8px;
+}
+
+.manager-sidebar nav button:hover,
+.manager-sidebar nav button.selected {
+  background: #2f6385;
+}
+
+.manager-sidebar nav button:hover:not(.selected) {
+  transform: translateX(6px);
+}
+
+.manager-sidebar nav button.selected {
+  box-shadow: inset 4px 0 var(--accent);
+}
+
+.manager-side-bottom a {
+  transition: transform 0.25s var(--ease), color 0.25s ease, background-color 0.25s ease;
+}
+
+.manager-side-bottom a:hover {
+  transform: translateX(4px);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fde68a;
+}
+
+.manager-topbar {
+  box-shadow: 0 2px 12px rgba(25, 61, 86, 0.06);
+  animation: riseIn 0.5s var(--ease) both;
+}
+
+.manager-content > * {
+  animation: riseIn 0.5s var(--ease) both;
+}
+
+.manager-primary {
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2a6d99, #1d5274);
+}
+
+.manager-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2f7fb2, #1d5274);
+}
+
+/* Tarjetas de estadísticas y accesos rápidos */
+.manager-stats article,
+.manager-shortcuts button,
+.manager-qr,
+.manager-workshop-summary {
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgba(25, 61, 86, 0.06);
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease), border-color 0.3s ease;
+}
+
+.manager-stats article { animation: riseIn 0.55s var(--ease) both; }
+.manager-stats article:nth-child(2) { animation-delay: 0.08s; }
+.manager-stats article:nth-child(3) { animation-delay: 0.16s; }
+
+.manager-stats article:hover,
+.manager-shortcuts button:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 14px 28px rgba(25, 61, 86, 0.14);
+  border-color: var(--accent);
+}
+
+.manager-shortcuts button strong {
+  transition: transform 0.3s var(--ease);
+}
+
+.manager-shortcuts button:hover strong {
+  transform: translateX(6px) scale(1.15);
+}
+
+/* Tabla */
+.manager-table-wrap {
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgba(25, 61, 86, 0.06);
+}
+
+.manager-table-wrap tbody tr {
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  animation: riseIn 0.45s var(--ease) both;
+}
+
+.manager-table-wrap tbody tr:nth-child(2) { animation-delay: 0.04s; }
+.manager-table-wrap tbody tr:nth-child(3) { animation-delay: 0.08s; }
+.manager-table-wrap tbody tr:nth-child(4) { animation-delay: 0.12s; }
+.manager-table-wrap tbody tr:nth-child(5) { animation-delay: 0.16s; }
+.manager-table-wrap tbody tr:nth-child(n + 6) { animation-delay: 0.2s; }
+
+.manager-table-wrap tbody tr:hover {
+  background: #fff8e1;
+  box-shadow: inset 4px 0 var(--accent);
+}
+
+.manager-product-cell > img {
+  border-radius: 8px;
+  transition: transform 0.3s var(--ease);
+}
+
+.manager-table-wrap tr:hover .manager-product-cell > img {
+  transform: scale(1.12) rotate(-2deg);
+}
+
+.manager-status {
+  transition: transform 0.2s var(--ease);
+}
+
+.manager-status.is-active::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #39a05a;
+  animation: pulseRing 1.8s ease-out infinite;
+}
+
+.manager-row-actions button {
+  border-radius: 8px;
+}
+
+.manager-row-actions button:hover {
+  background: #eef4ff;
+  border-color: #93c5fd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(30, 64, 175, 0.15);
+}
+
+.manager-row-actions button:last-child:hover {
+  background: #fff0ee;
+  border-color: #f2aaa4;
+  box-shadow: 0 4px 10px rgba(184, 65, 57, 0.18);
+}
+
+/* Botones del admin antiguo */
+.edit-btn, .delete-btn, .logout-btn, .view-catalog {
+  border-radius: 8px;
+}
+
+.edit-btn:hover, .delete-btn:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
+}
+
+.nav-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+}
+
+.nav-item.active {
+  box-shadow: 0 6px 14px rgba(251, 191, 36, 0.45);
+}
+
+.product-card {
+  border-radius: 16px;
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
+  animation: riseIn 0.55s var(--ease) both;
+}
+
+.product-card:hover {
+  transform: translateY(-7px);
+  box-shadow: 0 16px 32px rgba(30, 64, 175, 0.18);
+}
+
+/* ---------- Modales ---------- */
+.manager-modal-backdrop {
+  background: rgba(16, 44, 60, 0.55);
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease both;
+}
+
+.manager-modal {
+  border-radius: 18px;
+  border-top: 5px solid var(--accent);
+  animation: popIn 0.4s var(--ease) both;
+}
+
+.modal-content {
+  border-radius: 18px;
+  animation: popIn 0.4s var(--ease) both;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.94); }
+  to   { opacity: 1; transform: none; }
+}
+
+.manager-notice {
+  border-radius: 10px;
+  animation: riseIn 0.4s var(--ease) both;
+}
+
+.manager-notice button,
+.manager-modal-heading button {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  transition: transform 0.3s var(--ease), background-color 0.2s ease;
+}
+
+.manager-notice button:hover,
+.manager-modal-heading button:hover {
+  background: rgba(0, 0, 0, 0.08);
+  transform: rotate(90deg);
+}
+
+/* ---------- Accesibilidad ---------- */
+:focus-visible {
+  outline-offset: 3px;
+}
+
+@media (hover: none) {
+  .pub-card:hover,
+  .product-card:hover,
+  .manager-stats article:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
