@@ -153,10 +153,11 @@ const loginLimiter = (req, res, next) => {
 
 // Las tablas del catálogo se crean al iniciar la aplicación.
 
-// Helpers de productos                              
+// Helpers de productos                      
 // Nunca traemos la imagen completa en las listas
 const toPublic = (row) => ({
   id: row.id_producto,
+  tipo: row.tipo,
   name: row.nombre,
   description: row.descripcion,
   price: Number(row.precio),
@@ -203,7 +204,7 @@ const parseId = (value) => {
   return Number.isInteger(id) && id > 0 ? id : null;
 };
 
-// Rutas: sistema                                                     
+// Rutas: sistema                                                         
 app.get('/api/test', async (req, res) => {
   try {
     await pool.query('SELECT NOW()');
@@ -225,7 +226,7 @@ app.get('/api/workshops', async (req, res) => {
   }
 });
 
-// Rutas, sesion de administrador                                     
+// Rutas, sesion de administrador                                         
 app.post('/api/login', loginLimiter, async (req, res) => {
   const { username, email, password } = req.body || {};
   const identity = String(email || username || '').trim().toLowerCase();
@@ -392,11 +393,14 @@ app.post('/api/admin/users', requireAdmin, async (req, res) => {
   const password = String(req.body?.password || '');
   const rawWorkshopId = req.body?.id_taller;
   const idTaller = rawWorkshopId === '' || rawWorkshopId == null ? null : parseId(rawWorkshopId);
+  
   if (!nombre || nombre.length > 100) return res.status(400).json({ error: 'El nombre es obligatorio (máx. 100 caracteres)' });
-  if (!validEmail(correo) || correo.length > 150) return res.status(400).json({ error: 'El correo electrónico no es válido (máx. 150 caracteres)' });
+  if (!validEmail(correo)) return res.status(400).json({ error: 'El correo electrónico no es válido, debe tener el formato correcto (ejemplo@dominio.com)' });
+  if (correo.length > 150) return res.status(400).json({ error: 'El correo electrónico no puede superar los 150 caracteres' });
   if (apellido && apellido.length > 100) return res.status(400).json({ error: 'El apellido no puede superar 100 caracteres' });
   if (password.length < 8) return res.status(400).json({ error: 'La contraseña inicial debe tener al menos 8 caracteres' });
   if (rawWorkshopId != null && rawWorkshopId !== '' && !idTaller) return res.status(400).json({ error: 'Taller no válido' });
+  
   try {
     if (idTaller) {
       const workshop = await tallerController.findById(idTaller);
@@ -420,12 +424,15 @@ app.put('/api/admin/users/:id', requireAdmin, async (req, res) => {
   const rawWorkshopId = req.body?.id_taller;
   const idTaller = rawWorkshopId === '' || rawWorkshopId == null ? null : parseId(rawWorkshopId);
   const password = String(req.body?.password || '');
+  
   if (!id) return res.status(400).json({ error: 'ID no válido' });
   if (!nombre || nombre.length > 100) return res.status(400).json({ error: 'El nombre es obligatorio (máx. 100 caracteres)' });
-  if (!validEmail(correo) || correo.length > 150) return res.status(400).json({ error: 'El correo electrónico no es válido (máx. 150 caracteres)' });
+  if (!validEmail(correo)) return res.status(400).json({ error: 'El correo electrónico no es válido, debe tener el formato correcto (ejemplo@dominio.com)' });
+  if (correo.length > 150) return res.status(400).json({ error: 'El correo electrónico no puede superar los 150 caracteres' });
   if (apellido && apellido.length > 100) return res.status(400).json({ error: 'El apellido no puede superar 100 caracteres' });
   if (password && password.length < 8) return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
   if (rawWorkshopId != null && rawWorkshopId !== '' && !idTaller) return res.status(400).json({ error: 'Taller no válido' });
+  
   try {
     if (idTaller) {
       const workshop = await tallerController.findById(idTaller);

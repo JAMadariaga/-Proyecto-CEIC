@@ -1,7 +1,7 @@
 const { pool } = require('../db');
 
 const SELECT_PRODUCTS = `
-  SELECT p.id_producto, p.nombre, p.descripcion, p.precio, p.stock,
+  SELECT p.id_producto, p.tipo, p.nombre, p.descripcion, p.precio, p.stock,
          p.imagen_url, p.activo, p.creado_en, p.id_taller, t.nombre AS taller_nombre
   FROM productos p JOIN talleres t ON t.id_taller = p.id_taller`;
 
@@ -31,18 +31,18 @@ const findImageById = (id) => pool.query(
   [id]
 );
 
-const create = ({ idTaller, nombre, descripcion, precio, stock = 0, imagenUrl = null }) => pool.query(
-  `INSERT INTO productos (id_taller, nombre, descripcion, precio, stock, imagen_url)
-   VALUES ($1, $2, $3, $4, $5, $6) RETURNING id_producto`,
-  [idTaller, nombre, descripcion, precio, stock, imagenUrl]
+const create = ({ idTaller, nombre, descripcion, precio, stock = 0, imagenUrl = null, tipo = 'producto' }) => pool.query(
+  `INSERT INTO productos (id_taller, nombre, descripcion, precio, stock, imagen_url, tipo)
+   VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id_producto`,
+  [idTaller, nombre, descripcion, precio, stock, imagenUrl, tipo]
 ).then((result) => findById(result.rows[0].id_producto));
 
-const update = (id, { idTaller, nombre, descripcion, precio, stock = 0, imagenUrl }) => pool.query(
+const update = (id, { idTaller, nombre, descripcion, precio, stock = 0, imagenUrl, tipo = 'producto' }) => pool.query(
   `UPDATE productos
    SET id_taller = $2, nombre = $3, descripcion = $4, precio = $5, stock = $6,
-       imagen_url = COALESCE($7, imagen_url)
+       imagen_url = COALESCE($7, imagen_url), tipo = $8
    WHERE id_producto = $1 RETURNING id_producto`,
-  [id, idTaller, nombre, descripcion, precio, stock, imagenUrl]
+  [id, idTaller, nombre, descripcion, precio, stock, imagenUrl, tipo]
 ).then((result) => result.rowCount ? findById(id) : result);
 
 const remove = (id) => pool.query('DELETE FROM productos WHERE id_producto = $1', [id]);

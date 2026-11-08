@@ -3,8 +3,7 @@ import { QRCodeCanvas } from 'qrcode.react'
 import logo from '/logo.png'
 import { formatPrecio } from './talleres'
 
-const EMPTY_FORM = { nombre: '', apellido: '', correo: '', password: '', id_taller: '', descripcion: '', direccion: '', name: '', description: '', price: '', stock: '0', workshop_id: '', image: null, activo: true }
-
+const EMPTY_FORM = { nombre: '', apellido: '', correo: '', password: '', id_taller: '', descripcion: '', direccion: '', name: '', description: '', price: '', stock: '0', workshop_id: '', image: null, activo: true, tipo: 'producto' }
 async function responseData(response) {
   const data = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(data.error || 'No se pudo completar la operación')
@@ -142,7 +141,7 @@ function Manager() {
     const initial = { ...EMPTY_FORM }
     if (type === 'workshop' && item) Object.assign(initial, { nombre: item.nombre, descripcion: item.descripcion || '', direccion: item.direccion || '', activo: item.activo })
     if (type === 'user' && item) Object.assign(initial, { nombre: item.nombre, apellido: item.apellido || '', correo: item.correo, id_taller: item.id_taller || '', activo: item.activo })
-    if (type === 'product' && item) Object.assign(initial, { name: item.name, description: item.description || '', price: String(item.price), stock: String(item.stock || 0), workshop_id: String(item.workshop_id), image: null })
+    if (type === 'product' && item) Object.assign(initial, { name: item.name, description: item.description || '', price: String(item.price), stock: String(item.stock || 0), workshop_id: String(item.workshop_id), image: null, tipo: item.tipo || 'producto' })
     if (type === 'product' && !item && profile?.role === 'user') initial.workshop_id = String(profile.workshop?.id_taller || '')
     setForm(initial)
     setModal({ type, item })
@@ -170,7 +169,8 @@ function Manager() {
         fields.append('name', form.name)
         fields.append('description', form.description)
         fields.append('price', form.price)
-        fields.append('stock', form.stock)
+        fields.append('tipo', form.tipo)
+        fields.append('stock', form.tipo === 'servicio' ? '0' : form.stock)
         if (profile.role === 'admin') fields.append('workshop_id', form.workshop_id)
         if (form.image) fields.append('image', form.image)
         url = profile.role === 'admin'
@@ -332,9 +332,20 @@ function Manager() {
           {modal.item && <CheckField label="Cuenta activa" checked={form.activo} onChange={(activo) => setForm({ ...form, activo })} />}
         </>}
         {modal.type === 'product' && <>
+          <Field label="Tipo de ítem">
+            <select value={form.tipo} onChange={(event) => setForm({ ...form, tipo: event.target.value })}>
+              <option value="producto">Producto físico</option>
+              <option value="servicio">Servicio</option>
+            </select>
+          </Field>
           <Field label="Nombre"><input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} maxLength="150" required /></Field>
           <Field label="Descripción"><textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></Field>
-          <div className="manager-form-grid"><Field label="Precio"><input type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} required /></Field><Field label="Stock"><input type="number" min="0" step="1" value={form.stock} onChange={(event) => setForm({ ...form, stock: event.target.value })} required /></Field></div>
+          <div className="manager-form-grid">
+            <Field label="Precio"><input type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} required /></Field>
+            {form.tipo === 'producto' && (
+              <Field label="Stock"><input type="number" min="0" step="1" value={form.stock} onChange={(event) => setForm({ ...form, stock: event.target.value })} required /></Field>
+            )}
+          </div>
           {profile.role === 'admin' && <Field label="Taller"><select value={form.workshop_id} onChange={(event) => setForm({ ...form, workshop_id: event.target.value })} required><option value="">Seleccionar taller</option>{workshops.filter((item) => item.activo).map((item) => <option key={item.id_taller} value={item.id_taller}>{item.nombre}</option>)}</select></Field>}
           <Field label={modal.item ? 'Imagen (opcional)' : 'Imagen'}><input type="file" accept="image/*" onChange={(event) => setForm({ ...form, image: event.target.files?.[0] || null })} /></Field>
         </>}

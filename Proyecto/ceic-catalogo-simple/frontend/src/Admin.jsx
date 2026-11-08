@@ -2,15 +2,15 @@ import { useEffect, useState } from 'react'
 import logo from '/logo.png'
 import { TALLERES, NOMBRES_TALLER, formatPrecio } from './talleres'
 
-const FORM_VACIO = { name: '', description: '', price: '', image: null }
+const FORM_VACIO = { name: '', description: '', price: '', image: null, tipo: 'producto' }
 
 function Admin() {
   const [message, setMessage] = useState('Conectando...')
-  const [activePage, setActivePage] = useState('Inicio') // 'Inicio' o el id de un taller
+  const [activePage, setActivePage] = useState('Inicio')
   const [products, setProducts] = useState([])
   const [stats, setStats] = useState(null)
   const [showModal, setShowModal] = useState(false)
-  const [editingProduct, setEditingProduct] = useState(null) // null = creando
+  const [editingProduct, setEditingProduct] = useState(null)
   const [token, setToken] = useState(localStorage.getItem('ceic_token') || '')
   const [adminName, setAdminName] = useState('')
   const [loginForm, setLoginForm] = useState({ username: '', password: '' })
@@ -59,7 +59,6 @@ function Admin() {
     }
   }, [activePage])
 
-  // Estadísticas del QR (se muestran en Inicio)
   useEffect(() => {
     if (!token || activePage !== 'Inicio') return
     fetch('/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } })
@@ -144,7 +143,8 @@ function Admin() {
       name: product.name,
       description: product.description || '',
       price: String(product.price),
-      image: null
+      image: null,
+      tipo: product.tipo || 'producto'
     })
     setShowModal(true)
   }
@@ -154,8 +154,6 @@ function Admin() {
     setEditingProduct(null)
     setFormData(FORM_VACIO)
   }
-
-  // Sirve para crear y para editar
   const handleSubmitProduct = async (e) => {
     e.preventDefault()
     if (!token) return
@@ -166,6 +164,7 @@ function Admin() {
     formDataToSend.append('name', formData.name)
     formDataToSend.append('description', formData.description)
     formDataToSend.append('price', formData.price)
+    formDataToSend.append('tipo', formData.tipo)
     formDataToSend.append('taller', (isEdit && editingProduct.taller) || activePage)
     if (formData.image) {
       formDataToSend.append('image', formData.image)
@@ -188,7 +187,7 @@ function Admin() {
 
       const data = await response.json()
       if (!response.ok) {
-        alert(data.error || 'No se pudo guardar el producto')
+        alert(data.error || 'No se pudo guardar el ítem')
         return
       }
 
@@ -199,7 +198,7 @@ function Admin() {
       }
       closeModal()
     } catch (err) {
-      console.error('Error al guardar producto:', err)
+      console.error('Error al guardar ítem:', err)
       alert('Error de conexión con el servidor')
     }
   }
@@ -220,13 +219,13 @@ function Admin() {
 
       if (!response.ok) {
         const data = await response.json()
-        alert(data.error || 'No se pudo eliminar el producto')
+        alert(data.error || 'No se pudo eliminar el ítem')
         return
       }
 
       setProducts(products.filter((p) => p.id !== product.id))
     } catch (err) {
-      console.error('Error al eliminar producto:', err)
+      console.error('Error al eliminar ítem:', err)
       alert('Error de conexión con el servidor')
     }
   }
@@ -344,11 +343,11 @@ function Admin() {
           {isTaller && (
             <div className="taller-content">
               <button className="create-product-btn" onClick={openCreate}>
-                + Crear Producto
+                + Crear Producto / Servicio
               </button>
 
               {products.length === 0 && (
-                <p className="connection-status">Aún no hay productos en este taller.</p>
+                <p className="connection-status">Aún no hay elementos en este taller.</p>
               )}
 
               <div className="products-grid">
@@ -362,6 +361,9 @@ function Admin() {
                       />
                     )}
                     <div className="product-info">
+                      <span className="badge-tipo" style={{ fontSize: '0.75rem', background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                        {product.tipo || 'producto'}
+                      </span>
                       <h3 className="product-name">{product.name}</h3>
                       <p className="product-description">{product.description}</p>
                       <p className="product-price">{formatPrecio(product.price)}</p>
@@ -385,8 +387,18 @@ function Admin() {
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>{editingProduct ? 'Editar Producto' : 'Crear Producto'}</h2>
+            <h2>{editingProduct ? 'Editar Elemento' : 'Crear Producto o Servicio'}</h2>
             <form onSubmit={handleSubmitProduct}>
+              <div className="form-group">
+                <label>Tipo de ítem:</label>
+                <select
+                  value={formData.tipo}
+                  onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                >
+                  <option value="producto">Producto</option>
+                  <option value="servicio">Servicio</option>
+                </select>
+              </div>
               <div className="form-group">
                 <label>Nombre:</label>
                 <input
