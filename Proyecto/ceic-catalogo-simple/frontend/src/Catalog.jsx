@@ -41,7 +41,7 @@ function Catalog() {
         <div className="pub-header-inner">
           <img src={logo} alt="Logo del CEIC" className="pub-logo" />
           <div>
-            <h1>Catálogo de productos</h1>
+            <h1>Catálogo de productos y servicios</h1>
             <p>Talleres laborales del Centro Educativo Integral de Curicó</p>
           </div>
         </div>
@@ -70,13 +70,13 @@ function Catalog() {
 
         {status === 'loading' && (
           <p className="pub-message" role="status">
-            Cargando productos... puede tardar unos segundos.
+            Cargando productos y servicios... puede tardar unos segundos.
           </p>
         )}
 
         {status === 'error' && (
           <div className="pub-message" role="alert">
-            <p>No pudimos cargar los productos.</p>
+            <p>No pudimos cargar los productos y servicios.</p>
             <button className="pub-retry" onClick={() => { setStatus('loading'); loadProducts() }}>
               Intentar de nuevo
             </button>
@@ -84,7 +84,7 @@ function Catalog() {
         )}
 
         {status === 'ok' && visibles.length === 0 && (
-          <p className="pub-message">Todavía no hay productos en esta sección.</p>
+          <p className="pub-message">Todavía no hay productos ni servicios en esta sección.</p>
         )}
 
         {status === 'ok' && visibles.length > 0 && (
@@ -109,6 +109,9 @@ function Catalog() {
                       <span aria-hidden="true">{ICONOS_TALLER[product.taller] || '✦'}</span>{' '}
                       {product.workshop_name}
                     </span>
+                  )}
+                  {product.tipo === 'servicio' && (
+                    <span className="pub-badge pub-badge-service">Servicio</span>
                   )}
                   <h2 className="pub-name">{product.name}</h2>
                   {product.description && <p className="pub-desc">{product.description}</p>}

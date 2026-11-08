@@ -237,10 +237,10 @@ function Manager() {
   )
 
   const adminNav = [
-    ['dashboard', 'Resumen'], ['workshops', 'Talleres'], ['users', 'Usuarios'], ['products', 'Productos'],
+    ['dashboard', 'Resumen'], ['workshops', 'Talleres'], ['users', 'Usuarios'], ['products', 'Productos y servicios'],
   ]
   const nav = profile.role === 'admin' ? adminNav : [['workshop', 'Mi taller']]
-  const sectionTitle = ({ dashboard: 'Resumen', workshops: 'Talleres', users: 'Usuarios', products: 'Productos', workshop: profile.workshop?.nombre })[section]
+  const sectionTitle = ({ dashboard: 'Resumen', workshops: 'Talleres', users: 'Usuarios', products: 'Productos y servicios', workshop: profile.workshop?.nombre })[section]
 
   return (
     <div className="manager-shell">
@@ -256,7 +256,7 @@ function Manager() {
 
           {section === 'dashboard' && profile.role === 'admin' && <>
             <div className="manager-stats">
-              {[['Talleres', stats?.workshops], ['Usuarios', stats?.users], ['Productos', stats?.products]].map(([label, value]) => <article key={label}><span>{label}</span><strong>{value ?? '—'}</strong></article>)}
+              {[['Talleres', stats?.workshops], ['Usuarios', stats?.users], ['Productos y servicios', stats?.products]].map(([label, value]) => <article key={label}><span>{label}</span><strong>{value ?? '—'}</strong></article>)}
             </div>
             <h2>Administración</h2>
             <div className="manager-shortcuts">{adminNav.slice(1).map(([id, label]) => <button key={id} onClick={() => setSection(id)}><span>{label}</span><strong>{id === 'workshops' ? workshops.length : id === 'users' ? users.length : products.length}</strong><small>Gestionar {label.toLowerCase()} →</small></button>)}</div>
@@ -288,14 +288,14 @@ function Manager() {
 
           {section === 'workshop' && profile.role === 'user' && <>
             <section className="manager-workshop-summary"><span>INFORMACIÓN DEL TALLER</span><h2>{profile.workshop.nombre}</h2><p>{profile.workshop.descripcion || 'Sin descripción registrada'}</p>{profile.workshop.direccion && <p>{profile.workshop.direccion}</p>}</section>
-            <div className="manager-list-heading"><h2>Productos</h2><button className="manager-primary" onClick={() => openForm('product')}>+ Nuevo producto</button></div>
+            <div className="manager-list-heading"><h2>Productos y servicios</h2><button className="manager-primary" onClick={() => openForm('product')}>+ Nuevo producto o servicio</button></div>
             <ProductTable items={filteredProducts} onEdit={(item) => openForm('product', item)} onDelete={(item) => removeItem('product', item)} search={search} setSearch={setSearch} loading={loadingData} />
           </>}
 
           {section === 'workshops' && profile.role === 'admin' && <>
             <div className="manager-list-heading"><p>{workshops.length} talleres registrados</p><button className="manager-primary" onClick={() => openForm('workshop')}>+ Nuevo taller</button></div>
             <SearchInput value={search} onChange={setSearch} placeholder="Buscar talleres" />
-            <div className="manager-table-wrap"><table><thead><tr><th>Taller</th><th>Dirección</th><th>Usuarios</th><th>Productos</th><th>Estado</th><th></th></tr></thead><tbody>
+            <div className="manager-table-wrap"><table><thead><tr><th>Taller</th><th>Dirección</th><th>Usuarios</th><th>Productos y servicios</th><th>Estado</th><th></th></tr></thead><tbody>
               {filteredWorkshops.map((item) => <tr key={item.id_taller}><td><strong>{item.nombre}</strong><small>{item.descripcion || 'Sin descripción'}</small></td><td>{item.direccion || '—'}</td><td>{item.usuarios}</td><td>{item.productos}</td><td><Status active={item.activo} /></td><td><div className="manager-row-actions"><button onClick={() => { setWorkshopFilter(String(item.id_taller)); setSection('products') }}>Productos</button><button onClick={() => { setSearch(item.nombre); setSection('users') }}>Usuarios</button><RowActions onEdit={() => openForm('workshop', item)} onDelete={() => removeItem('workshop', item)} /></div></td></tr>)}
             </tbody></table>{filteredWorkshops.length === 0 && <Empty text={loadingData ? 'Cargando talleres...' : 'No hay talleres que coincidan.'} />}</div>
           </>}
@@ -309,15 +309,15 @@ function Manager() {
           </>}
 
           {section === 'products' && profile.role === 'admin' && <>
-            <div className="manager-list-heading"><p>{products.length} productos registrados</p><button className="manager-primary" onClick={() => openForm('product')}>+ Nuevo producto</button></div>
-            <div className="manager-filters"><SearchInput value={search} onChange={setSearch} placeholder="Buscar productos" /><select aria-label="Filtrar por taller" value={workshopFilter} onChange={(event) => setWorkshopFilter(event.target.value)}><option value="">Todos los talleres</option>{workshops.map((item) => <option key={item.id_taller} value={item.id_taller}>{item.nombre}</option>)}</select></div>
+            <div className="manager-list-heading"><p>{products.length} productos y servicios registrados</p><button className="manager-primary" onClick={() => openForm('product')}>+ Nuevo producto o servicio</button></div>
+            <div className="manager-filters"><SearchInput value={search} onChange={setSearch} placeholder="Buscar productos o servicios" /><select aria-label="Filtrar por taller" value={workshopFilter} onChange={(event) => setWorkshopFilter(event.target.value)}><option value="">Todos los talleres</option>{workshops.map((item) => <option key={item.id_taller} value={item.id_taller}>{item.nombre}</option>)}</select></div>
             <ProductTable items={filteredProducts} onEdit={(item) => openForm('product', item)} onDelete={(item) => removeItem('product', item)} loading={loadingData} />
           </>}
         </section>
       </main>
 
       {modal && <div className="manager-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null) }}><form className="manager-modal" onSubmit={saveForm}>
-        <div className="manager-modal-heading"><h2>{modal.item ? 'Editar' : 'Crear'} {modal.type === 'workshop' ? 'taller' : modal.type === 'user' ? 'usuario' : 'producto'}</h2><button type="button" aria-label="Cerrar" onClick={() => setModal(null)}>×</button></div>
+        <div className="manager-modal-heading"><h2>{modal.item ? 'Editar' : 'Crear'} {modal.type === 'workshop' ? 'taller' : modal.type === 'user' ? 'usuario' : 'producto o servicio'}</h2><button type="button" aria-label="Cerrar" onClick={() => setModal(null)}>×</button></div>
         {modal.type === 'workshop' && <>
           <Field label="Nombre"><input value={form.nombre} onChange={(event) => setForm({ ...form, nombre: event.target.value })} maxLength="100" required /></Field>
           <Field label="Descripción"><textarea value={form.descripcion} onChange={(event) => setForm({ ...form, descripcion: event.target.value })} /></Field>
@@ -358,10 +358,10 @@ function Manager() {
 
 function ProductTable({ items, onEdit, onDelete, search, setSearch, loading }) {
   return <>
-    {setSearch && <SearchInput value={search} onChange={setSearch} placeholder="Buscar productos" />}
-    <div className="manager-table-wrap"><table><thead><tr><th>Producto</th><th>Taller</th><th>Precio</th><th>Stock</th><th></th></tr></thead><tbody>
+    {setSearch && <SearchInput value={search} onChange={setSearch} placeholder="Buscar productos o servicios" />}
+    <div className="manager-table-wrap"><table><thead><tr><th>Producto / servicio</th><th>Taller</th><th>Precio</th><th>Stock</th><th></th></tr></thead><tbody>
       {items.map((item) => <tr key={item.id}><td className="manager-product-cell">{item.image_url && <img src={item.image_url} alt="" />}<span><strong>{item.name}</strong><small>{item.description || 'Sin descripción'}</small></span></td><td>{item.workshop_name || 'Mi taller'}</td><td>{formatPrecio(item.price)}</td><td>{item.stock}</td><td><RowActions onEdit={() => onEdit(item)} onDelete={() => onDelete(item)} /></td></tr>)}
-    </tbody></table>{items.length === 0 && <Empty text={loading ? 'Cargando productos...' : 'No hay productos que mostrar.'} />}</div>
+    </tbody></table>{items.length === 0 && <Empty text={loading ? 'Cargando productos y servicios...' : 'No hay productos ni servicios que mostrar.'} />}</div>
   </>
 }
 

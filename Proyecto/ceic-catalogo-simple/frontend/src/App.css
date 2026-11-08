@@ -621,4 +621,18 @@ body {
   .manager-form-grid { grid-template-columns: 1fr; gap: 0; }
   .manager-modal { padding: 17px; }
 }
+.pub-card {
+  min-width: 0;
+  overflow: hidden;
+}
 
+.pub-card .pub-desc {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.pub-card .pub-badge-service {
+  background: #fef3c7;
+  color: #92400e;
+  margin-left: 0.4rem;
+}
