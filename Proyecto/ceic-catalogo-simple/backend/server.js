@@ -290,7 +290,10 @@ app.post('/api/logout', requireAuth, (req, res) => {
 // Cambiar contraseña 
 app.post('/api/admin/password', requireAdmin, async (req, res) => {
   const { currentPassword, newPassword } = req.body || {};
-  if (!currentPassword || !newPassword || newPassword.length < 8) {
+  if (!currentPassword) {
+    return res.status(400).json({ error: 'Debes ingresar tu contraseña actual' });
+  }
+  if (!newPassword || newPassword.length < 8) {
     return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres' });
   }
   try {

@@ -3,7 +3,7 @@ import { QRCodeCanvas } from 'qrcode.react'
 import logo from '/logo.png'
 import { formatPrecio } from './talleres'
 
-const EMPTY_FORM = { nombre: '', apellido: '', correo: '', password: '', id_taller: '', descripcion: '', direccion: '', name: '', description: '', price: '', stock: '0', workshop_id: '', image: null, activo: true, tipo: 'producto' }
+const EMPTY_FORM = { nombre: '', apellido: '', correo: '', password: '', id_taller: '', descripcion: '', direccion: '', name: '', description: '', price: '', stock: '0', workshop_id: '', image: null, activo: true, tipo: 'producto', currentPassword: '', newPassword: '', confirmPassword: '' }
 async function responseData(response) {
   const data = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(data.error || 'No se pudo completar la operación')
@@ -143,6 +143,7 @@ function Manager() {
     if (type === 'user' && item) Object.assign(initial, { nombre: item.nombre, apellido: item.apellido || '', correo: item.correo, id_taller: item.id_taller || '', activo: item.activo })
     if (type === 'product' && item) Object.assign(initial, { name: item.name, description: item.description || '', price: String(item.price), stock: String(item.stock || 0), workshop_id: String(item.workshop_id), image: null, tipo: item.tipo || 'producto' })
     if (type === 'product' && !item && profile?.role === 'user') initial.workshop_id = String(profile.workshop?.id_taller || '')
+    if (type === 'password') Object.assign(initial, { currentPassword: '', newPassword: '', confirmPassword: '' })
     setForm(initial)
     setModal({ type, item })
     setNotice('')
@@ -153,6 +154,18 @@ function Manager() {
     setBusy(true)
     try {
       const { type, item } = modal
+      if (type === 'password') {
+        if (!form.currentPassword) throw new Error('Debes ingresar tu contraseña actual')
+        if (!form.newPassword || form.newPassword.length < 8) throw new Error('La nueva contraseña debe tener al menos 8 caracteres')
+        if (form.newPassword !== form.confirmPassword) throw new Error('Las nuevas contraseñas no coinciden')
+        const data = await requestApi(token, '/api/admin/password', {
+          method: 'POST',
+          body: JSON.stringify({ currentPassword: form.currentPassword, newPassword: form.newPassword }),
+        })
+        setModal(null)
+        setNotice(data.message || 'Contraseña actualizada correctamente')
+        return
+      }
       let url
       let method
       let body
@@ -247,10 +260,28 @@ function Manager() {
       <aside className="manager-sidebar">
         <a className="manager-brand" href="/"><img src={logo} alt="CEIC" /><span>CEIC<span>Gestión</span></span></a>
         <nav aria-label="Navegación principal">{nav.map(([id, label]) => <button key={id} className={section === id ? 'selected' : ''} onClick={() => { setSection(id); setSearch(''); setNotice('') }}>{label}</button>)}</nav>
-        <div className="manager-side-bottom"><a href="/" target="_blank" rel="noreferrer">Ver catálogo</a><button onClick={logout}>Cerrar sesión</button></div>
+        <div className="manager-side-bottom">
+          <a href="/" target="_blank" rel="noreferrer">Ver catálogo</a>
+          {profile.role === 'admin' && <button type="button" onClick={() => openForm('password')}>Cambiar contraseña</button>}
+          <button onClick={logout}>Cerrar sesión</button>
+        </div>
       </aside>
       <main className="manager-main">
-        <header className="manager-topbar"><div><span className="manager-eyebrow">{profile.role === 'admin' ? 'ADMINISTRACIÓN' : 'TALLER'}</span><h1>{sectionTitle}</h1></div><div className="manager-identity"><span>{profile.username}</span><span>{profile.role === 'admin' ? 'Administrador' : profile.workshop.nombre}</span></div></header>
+        <header className="manager-topbar">
+          <div>
+            <span className="manager-eyebrow">{profile.role === 'admin' ? 'ADMINISTRACIÓN' : 'TALLER'}</span>
+            <h1>{sectionTitle}</h1>
+          </div>
+          <div className="manager-identity">
+            <span>{profile.username}</span>
+            <span>{profile.role === 'admin' ? 'Administrador' : profile.workshop.nombre}</span>
+            {profile.role === 'admin' && (
+              <button type="button" className="manager-identity-btn" onClick={() => openForm('password')}>
+                Cambiar contraseña
+              </button>
+            )}
+          </div>
+        </header>
         <section className="manager-content">
           {notice && <p className="manager-notice" role="status">{notice}<button aria-label="Cerrar mensaje" onClick={() => setNotice('')}>×</button></p>}
 
@@ -259,7 +290,14 @@ function Manager() {
               {[['Talleres', stats?.workshops], ['Usuarios', stats?.users], ['Productos y servicios', stats?.products]].map(([label, value]) => <article key={label}><span>{label}</span><strong>{value ?? '—'}</strong></article>)}
             </div>
             <h2>Administración</h2>
-            <div className="manager-shortcuts">{adminNav.slice(1).map(([id, label]) => <button key={id} onClick={() => setSection(id)}><span>{label}</span><strong>{id === 'workshops' ? workshops.length : id === 'users' ? users.length : products.length}</strong><small>Gestionar {label.toLowerCase()} →</small></button>)}</div>
+            <div className="manager-shortcuts">
+              {adminNav.slice(1).map(([id, label]) => <button key={id} onClick={() => setSection(id)}><span>{label}</span><strong>{id === 'workshops' ? workshops.length : id === 'users' ? users.length : products.length}</strong><small>Gestionar {label.toLowerCase()} →</small></button>)}
+              <button type="button" onClick={() => openForm('password')}>
+                <span>Seguridad</span>
+                <strong>Contraseña</strong>
+                <small>Cambiar mi clave →</small>
+              </button>
+            </div>
             <section className="manager-qr">
               <div className="manager-qr-heading">
                 <div><h2>Código QR del catálogo</h2><p>Escaneos registrados: <strong>{stats?.qrScans ?? '—'}</strong></p></div>
@@ -317,7 +355,38 @@ function Manager() {
       </main>
 
       {modal && <div className="manager-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null) }}><form className="manager-modal" onSubmit={saveForm}>
-        <div className="manager-modal-heading"><h2>{modal.item ? 'Editar' : 'Crear'} {modal.type === 'workshop' ? 'taller' : modal.type === 'user' ? 'usuario' : 'producto o servicio'}</h2><button type="button" aria-label="Cerrar" onClick={() => setModal(null)}>×</button></div>
+        <div className="manager-modal-heading"><h2>{modal.type === 'password' ? 'Cambiar contraseña de administrador' : `${modal.item ? 'Editar' : 'Crear'} ${modal.type === 'workshop' ? 'taller' : modal.type === 'user' ? 'usuario' : 'producto o servicio'}`}</h2><button type="button" aria-label="Cerrar" onClick={() => setModal(null)}>×</button></div>
+        {modal.type === 'password' && <>
+          <Field label="Contraseña actual">
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={form.currentPassword}
+              onChange={(event) => setForm({ ...form, currentPassword: event.target.value })}
+              required
+            />
+          </Field>
+          <Field label="Nueva contraseña (mínimo 8 caracteres)">
+            <input
+              type="password"
+              autoComplete="new-password"
+              value={form.newPassword}
+              onChange={(event) => setForm({ ...form, newPassword: event.target.value })}
+              minLength="8"
+              required
+            />
+          </Field>
+          <Field label="Confirmar nueva contraseña">
+            <input
+              type="password"
+              autoComplete="new-password"
+              value={form.confirmPassword}
+              onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })}
+              minLength="8"
+              required
+            />
+          </Field>
+        </>}
         {modal.type === 'workshop' && <>
           <Field label="Nombre"><input value={form.nombre} onChange={(event) => setForm({ ...form, nombre: event.target.value })} maxLength="100" required /></Field>
           <Field label="Descripción"><textarea value={form.descripcion} onChange={(event) => setForm({ ...form, descripcion: event.target.value })} /></Field>
@@ -350,7 +419,7 @@ function Manager() {
           <Field label={modal.item ? 'Imagen (opcional)' : 'Imagen'}><input type="file" accept="image/*" onChange={(event) => setForm({ ...form, image: event.target.files?.[0] || null })} /></Field>
         </>}
         {notice && <p className="manager-error" role="alert">{notice}</p>}
-        <div className="manager-modal-actions"><button type="button" onClick={() => setModal(null)}>Cancelar</button><button className="manager-primary" disabled={busy}>{busy ? 'Guardando...' : 'Guardar'}</button></div>
+        <div className="manager-modal-actions"><button type="button" onClick={() => setModal(null)}>Cancelar</button><button className="manager-primary" disabled={busy}>{busy ? 'Guardando...' : modal.type === 'password' ? 'Actualizar contraseña' : 'Guardar'}</button></div>
       </form></div>}
     </div>
   )

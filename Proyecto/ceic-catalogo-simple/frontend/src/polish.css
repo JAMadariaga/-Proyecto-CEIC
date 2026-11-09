@@ -25,27 +25,53 @@ body {
 
 /* ---------- Animaciones base ---------- */
 @keyframes riseIn {
-  from { opacity: 0; transform: translateY(18px) scale(0.98); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @keyframes floatY {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 @keyframes shimmer {
-  from { background-position: -200% 0; }
-  to   { background-position: 200% 0; }
+  from {
+    background-position: -200% 0;
+  }
+
+  to {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes pulseRing {
-  0%   { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.55); }
-  100% { box-shadow: 0 0 0 14px rgba(251, 191, 36, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.55);
+  }
+
+  100% {
+    box-shadow: 0 0 0 14px rgba(251, 191, 36, 0);
+  }
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ---------- Botones: base compartida ---------- */
@@ -65,7 +91,7 @@ body {
 .manager-sidebar nav button,
 .manager-side-bottom button,
 .modal-actions button,
-.manager-modal-actions > button {
+.manager-modal-actions>button {
   position: relative;
   overflow: hidden;
   transition:
@@ -123,7 +149,7 @@ body {
 .manager-row-actions button:active,
 .manager-shortcuts button:active,
 .modal-actions button:active,
-.manager-modal-actions > button:active {
+.manager-modal-actions>button:active {
   transform: translateY(1px) scale(0.97);
   box-shadow: none;
 }
@@ -153,10 +179,25 @@ body {
   pointer-events: none;
 }
 
-.pub-header::before { width: 260px; height: 260px; right: -60px; top: -120px; }
-.pub-header::after  { width: 140px; height: 140px; right: 22%; bottom: -80px; background: rgba(255, 255, 255, 0.1); }
+.pub-header::before {
+  width: 260px;
+  height: 260px;
+  right: -60px;
+  top: -120px;
+}
 
-.pub-header-inner { position: relative; z-index: 1; }
+.pub-header::after {
+  width: 140px;
+  height: 140px;
+  right: 22%;
+  bottom: -80px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pub-header-inner {
+  position: relative;
+  z-index: 1;
+}
 
 .pub-logo {
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
@@ -167,7 +208,10 @@ body {
 .pub-header p {
   animation: riseIn 0.7s var(--ease) both;
 }
-.pub-header p { animation-delay: 0.12s; }
+
+.pub-header p {
+  animation-delay: 0.12s;
+}
 
 /* Filtros tipo "chip" */
 .pub-filter {
@@ -192,7 +236,9 @@ body {
   transform: translateY(-3px) scale(1.03);
 }
 
-.pub-filters { animation: riseIn 0.6s var(--ease) 0.15s both; }
+.pub-filters {
+  animation: riseIn 0.6s var(--ease) 0.15s both;
+}
 
 /* Tarjetas de producto */
 .pub-card {
@@ -203,13 +249,33 @@ body {
   animation: riseIn 0.6s var(--ease) both;
 }
 
-.pub-card:nth-child(1) { animation-delay: 0.05s; }
-.pub-card:nth-child(2) { animation-delay: 0.1s; }
-.pub-card:nth-child(3) { animation-delay: 0.15s; }
-.pub-card:nth-child(4) { animation-delay: 0.2s; }
-.pub-card:nth-child(5) { animation-delay: 0.25s; }
-.pub-card:nth-child(6) { animation-delay: 0.3s; }
-.pub-card:nth-child(n + 7) { animation-delay: 0.35s; }
+.pub-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.pub-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.pub-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.pub-card:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.pub-card:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.pub-card:nth-child(6) {
+  animation-delay: 0.3s;
+}
+
+.pub-card:nth-child(n + 7) {
+  animation-delay: 0.35s;
+}
 
 .pub-card:hover {
   transform: translateY(-8px) rotate(-0.4deg);
@@ -298,8 +364,13 @@ body {
   transition: transform 0.3s var(--ease);
 }
 
-.pub-footer a:hover { color: var(--brand); }
-.pub-footer a:hover::after { transform: scaleX(1); }
+.pub-footer a:hover {
+  color: var(--brand);
+}
+
+.pub-footer a:hover::after {
+  transform: scaleX(1);
+}
 
 /* ---------- Login ---------- */
 .login-page,
@@ -321,7 +392,7 @@ body {
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
 }
 
-.manager-login-panel > img,
+.manager-login-panel>img,
 .login-logo {
   animation: floatY 5s ease-in-out infinite;
 }
@@ -407,7 +478,7 @@ body {
   animation: riseIn 0.5s var(--ease) both;
 }
 
-.manager-content > * {
+.manager-content>* {
   animation: riseIn 0.5s var(--ease) both;
 }
 
@@ -430,9 +501,17 @@ body {
   transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease), border-color 0.3s ease;
 }
 
-.manager-stats article { animation: riseIn 0.55s var(--ease) both; }
-.manager-stats article:nth-child(2) { animation-delay: 0.08s; }
-.manager-stats article:nth-child(3) { animation-delay: 0.16s; }
+.manager-stats article {
+  animation: riseIn 0.55s var(--ease) both;
+}
+
+.manager-stats article:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.manager-stats article:nth-child(3) {
+  animation-delay: 0.16s;
+}
 
 .manager-stats article:hover,
 .manager-shortcuts button:hover {
@@ -460,23 +539,37 @@ body {
   animation: riseIn 0.45s var(--ease) both;
 }
 
-.manager-table-wrap tbody tr:nth-child(2) { animation-delay: 0.04s; }
-.manager-table-wrap tbody tr:nth-child(3) { animation-delay: 0.08s; }
-.manager-table-wrap tbody tr:nth-child(4) { animation-delay: 0.12s; }
-.manager-table-wrap tbody tr:nth-child(5) { animation-delay: 0.16s; }
-.manager-table-wrap tbody tr:nth-child(n + 6) { animation-delay: 0.2s; }
+.manager-table-wrap tbody tr:nth-child(2) {
+  animation-delay: 0.04s;
+}
+
+.manager-table-wrap tbody tr:nth-child(3) {
+  animation-delay: 0.08s;
+}
+
+.manager-table-wrap tbody tr:nth-child(4) {
+  animation-delay: 0.12s;
+}
+
+.manager-table-wrap tbody tr:nth-child(5) {
+  animation-delay: 0.16s;
+}
+
+.manager-table-wrap tbody tr:nth-child(n + 6) {
+  animation-delay: 0.2s;
+}
 
 .manager-table-wrap tbody tr:hover {
   background: #fff8e1;
   box-shadow: inset 4px 0 var(--accent);
 }
 
-.manager-product-cell > img {
+.manager-product-cell>img {
   border-radius: 8px;
   transition: transform 0.3s var(--ease);
 }
 
-.manager-table-wrap tr:hover .manager-product-cell > img {
+.manager-table-wrap tr:hover .manager-product-cell>img {
   transform: scale(1.12) rotate(-2deg);
 }
 
@@ -513,11 +606,15 @@ body {
 }
 
 /* Botones del admin antiguo */
-.edit-btn, .delete-btn, .logout-btn, .view-catalog {
+.edit-btn,
+.delete-btn,
+.logout-btn,
+.view-catalog {
   border-radius: 8px;
 }
 
-.edit-btn:hover, .delete-btn:hover {
+.edit-btn:hover,
+.delete-btn:hover {
   opacity: 1;
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
@@ -562,8 +659,15 @@ body {
 }
 
 @keyframes popIn {
-  from { opacity: 0; transform: translateY(24px) scale(0.94); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .manager-notice {
@@ -585,12 +689,33 @@ body {
   transform: rotate(90deg);
 }
 
+.manager-identity-btn {
+  margin-top: 4px;
+  background: rgba(25, 61, 86, 0.05);
+  border: 1px solid rgba(25, 61, 86, 0.15);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary, #193d56);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.manager-identity-btn:hover {
+  background: var(--primary, #193d56);
+  color: #fff;
+  border-color: var(--primary, #193d56);
+}
+
 /* ---------- Accesibilidad ---------- */
 :focus-visible {
   outline-offset: 3px;
 }
 
 @media (hover: none) {
+
   .pub-card:hover,
   .product-card:hover,
   .manager-stats article:hover {
@@ -599,7 +724,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
+  html {
+    scroll-behavior: auto;
+  }
 
   *,
   *::before,
