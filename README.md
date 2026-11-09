@@ -108,36 +108,9 @@ Al iniciar el servidor, `backend/db.js` crea de forma automática e idempotente 
 
 ---
 
-## Configuración de Variables de Entorno
-
-Crea un archivo `.env` dentro de `Proyecto/ceic-catalogo-simple/.env` con la siguiente estructura:
-
-```env
-# Conexión directa mediante URL (ej. Neon, Render, Supabase)
-DATABASE_URL=postgresql://usuario:password@host:5432/ceic_catalogo
-
-# O configuración por parámetros individuales (usado en Docker / local)
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=ceic_catalogo
-DB_USER=ceic_user
-DB_PASSWORD=ceic_password
-
-# Credenciales iniciales del Administrador
-ADMIN_USERNAME=admin
-ADMIN_EMAIL=admin
-ADMIN_NAME=Administrador
-ADMIN_PASSWORD=tu_password_seguro_aqui
-
-# Orígenes permitidos por CORS (separados por coma)
-CORS_ORIGIN=http://localhost:5173
-```
-
----
-
 ## Instalación y Ejecución
 
-### Opción 1: Ejecución con Docker (Recomendado)
+### Ejecución con Docker (Recomendado)
 
 Ubícate en la carpeta de la aplicación y levanta los contenedores:
 
@@ -149,33 +122,6 @@ docker compose up --build
 - **Catálogo Público**: [http://localhost:3000](http://localhost:3000)
 - **Panel de Administración**: [http://localhost:3000/admin](http://localhost:3000/admin)
 - **Base de Datos PostgreSQL**: `localhost:5432`
-
----
-
-### Opción 2: Ejecución en Entorno de Desarrollo Local
-
-#### 1. Clonar e instalar dependencias del Backend
-```bash
-cd Proyecto/ceic-catalogo-simple/backend
-npm install
-npm start
-```
-El servidor API quedará disponible en `http://localhost:3000`.
-
-#### 2. Instalar dependencias y levantar el Frontend
-En una nueva terminal:
-```bash
-cd Proyecto/ceic-catalogo-simple/frontend
-npm install
-npm run dev
-```
-El cliente de desarrollo Vite se abrirá en `http://localhost:5173` (con proxy automático hacia `/api` en el puerto `3000`).
-
-#### 3. Ejecutar pruebas unitarias
-```bash
-cd Proyecto/ceic-catalogo-simple/backend
-npm test
-```
 
 ---
 
