@@ -304,6 +304,11 @@ app.post('/api/admin/password', requireAdmin, async (req, res) => {
       return res.status(401).json({ error: 'La contraseña actual no es correcta' });
     }
     await adminController.updatePassword(admin.id_admin, hashPassword(newPassword));
+    for (const [token, session] of sessions) {
+      if (session.role === 'admin' && session.id === admin.id_admin) {
+        sessions.delete(token);
+      }
+    }
     res.json({ message: 'Contraseña actualizada' });
   } catch (err) {
     console.error('Error al cambiar contraseña:', err);

@@ -158,12 +158,13 @@ function Manager() {
         if (!form.currentPassword) throw new Error('Debes ingresar tu contraseña actual')
         if (!form.newPassword || form.newPassword.length < 8) throw new Error('La nueva contraseña debe tener al menos 8 caracteres')
         if (form.newPassword !== form.confirmPassword) throw new Error('Las nuevas contraseñas no coinciden')
-        const data = await requestApi(token, '/api/admin/password', {
+        await requestApi(token, '/api/admin/password', {
           method: 'POST',
           body: JSON.stringify({ currentPassword: form.currentPassword, newPassword: form.newPassword }),
         })
         setModal(null)
-        setNotice(data.message || 'Contraseña actualizada correctamente')
+        setNotice('')
+        await logout()
         return
       }
       let url
@@ -292,11 +293,6 @@ function Manager() {
             <h2>Administración</h2>
             <div className="manager-shortcuts">
               {adminNav.slice(1).map(([id, label]) => <button key={id} onClick={() => setSection(id)}><span>{label}</span><strong>{id === 'workshops' ? workshops.length : id === 'users' ? users.length : products.length}</strong><small>Gestionar {label.toLowerCase()} →</small></button>)}
-              <button type="button" onClick={() => openForm('password')}>
-                <span>Seguridad</span>
-                <strong>Contraseña</strong>
-                <small>Cambiar mi clave →</small>
-              </button>
             </div>
             <section className="manager-qr">
               <div className="manager-qr-heading">
